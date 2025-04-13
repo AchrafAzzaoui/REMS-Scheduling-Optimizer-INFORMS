@@ -12,6 +12,7 @@ import re
 
 data = pd.read_csv('march_data.csv')
 
+month = "March"
 
 emails = data['Email Address'].tolist()
 
@@ -147,7 +148,7 @@ model.optimize()
 
 all_vars = model.getVars()
 values = model.getAttr("X", all_vars)
-names = model.getAttr("VarName", all_vars)
+#names = model.getAttr("VarName", all_vars)
 
 #for name, val in zip(names, values):
 #    print(f"{name} = {val}")
@@ -162,10 +163,22 @@ x_values = np.zeros((num_people, num_shifts))
 # Fill the array with optimized values
 for i in range(num_people):
     for j in range(num_shifts):
-        x_values[i, j] = x[i, j].X  # Get the value of the decision variable
+        
+        if avail[i,j] == 1:
+             x_values[i, j] = x[i, j].X  # Get the value of the decision variable
+             if x_values[i,j] == 0:
+                 x_values[i,j] = 2
 
+shifts_this_month = [f"{month} {i} {shift}" for i in range(1, 32) for shift in ["Morning", "Evening"]]
+df = pd.DataFrame(x_values, columns = shifts_this_month)
+df = df.set_index(pd.Index(tuple(zip(names,emails))))
+df.to_csv("sample_output.csv")
+print(df.head())
+
+    
 # Print the full matrix
 # Number of people assigned to eachs shift         
 print(np.sum(x_values, axis=0))
 #Number of shifts assigned to each person
 print(np.sum(x_values, axis=1))
+
