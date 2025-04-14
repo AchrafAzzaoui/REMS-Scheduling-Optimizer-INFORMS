@@ -1,70 +1,129 @@
 import numpy as np
 import gurobipy as gp
 from gurobipy import GRB
+import pandas as pd
+import re
 
 
 #Given Data
 
 
-# Number of people
-num_people = 60
+#Parsin
+'''
+data = pd.read_csv('march_data.csv')
 
-# Number of shifts
-num_shifts = 60
+emails = data['Email Address'].tolist()
 
-# Binary arrays indicating whether a person is Off-Campus (1) or On-Campus (0)
-#OC = np.random.randint(0, 2, num_people)
+names = data["First Name Last Name"].tolist()
 
-OC = [0] * num_people  # All people are initially On-Campus (0)
+O = (data["Are you an Observer or DC Member?"] != "Observer").astype(int).tolist()
+#print(Observer)
+
+#print(data.columns)
+
+OC = (data["Are you Off Campus (needed for Duncan Room Scheduling) "] == "Yes").astype(int).tolist()
+#print(campus)
+
+month_map = {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+}
+
+def extract_and_format_shift(col):
+    # Extract text within square brackets
+    match = re.search(r'\[(.*?)\]', col)
+    if match:
+        shift = match.group(1)
+        shift = shift.strip()  # Remove leading/trailing whitespace
+        # Remove any trailing parenthetical information (including trailing whitespace)
+        shift = re.sub(r'\s*\(.*?\)\s*$', '', shift)
+        # Replace abbreviated month names with full names
+        for abbr, full in month_map.items():
+            shift = re.sub(r'\b' + re.escape(abbr) + r'\b', full, shift)
+        return shift
+    else:
+        # Return the original column if no brackets are found
+        return col
 
 
-# Binary arrays indicating whether a person is a Non-Observer (1) or Observer (0)
-num_observers = int(0.85 * num_people)  # 15% of 60 = 9 observers
-O = np.zeros(num_people, dtype=int)  # Start with all as non-observers (1)
-observer_indices = np.random.choice(num_people, num_observers, replace=False)
-O[observer_indices] = 1  # Assign 1 (observer) to exactly 9 people
+# Apply the function to all column names
+data.columns = [extract_and_format_shift(col) for col in data.columns]
 
-# Availability matrix (1 if available, 0 otherwise), ensuring exactly 6 available shifts per person
+avail = data.iloc[:, 5:].values
+
+dates = data.columns[5:]
+print(dates)
+
+pattern = re.compile(r'\b(Thu|Fri|Sat)\b.*8PM')
+
+# Apply regex to each column name and build a binary array
+dates_vector = np.array([1 if pattern.search(col) else 0 for col in data.columns])
+print(dates_vector)
+
+avail = np.nan_to_num(avail, nan=0).astype(int)
+
+
+
+num_people = avail.shape[0]
+num_shifts = avail.shape[1]
+'''
+
+'''
+# Set random seed for reproducibility
+#random.seed(42)
+#np.random.seed(42)
+
+# Create fake names and emails
+first_names = ["Alex", "Jamie", "Taylor", "Jordan", "Morgan", "Casey", "Riley", "Avery", "Peyton", "Quinn",
+               "Drew", "Cameron", "Skyler", "Logan", "Charlie", "Reese", "Emerson", "Rowan", "Dakota", "Elliot"]
+last_names = ["Smith", "Johnson", "Lee", "Brown", "Jones", "Garcia", "Davis", "Miller", "Wilson", "Anderson",
+              "Thomas", "Moore", "Jackson", "Martin", "Clark", "Lewis", "Walker", "Young", "Allen", "King"]
+
+names = [f"{first} {last}" for first, last in zip(first_names, last_names)]
+emails = [f"{name.lower().replace(' ', '.')}@rice.edu" for name in names]
+
+# Most people are DCs (1), some are Observers (0)
+O = np.random.choice([1, 0], size=20, p=[0.85, 0.15]).tolist()
+
+# Most people are on campus (0), some are off-campus (1)
+OC = np.random.choice([0, 1], size=20, p=[0.8, 0.2]).tolist()
+
+# Generate availability: 4 shifts per person
+num_people = 20
+num_shifts = 25
 avail = np.zeros((num_people, num_shifts), dtype=int)
+
 for i in range(num_people):
-    available_shifts = np.random.choice(num_shifts, 6, replace=False)
+    available_shifts = np.random.choice(num_shifts, size=4, replace=False)
     avail[i, available_shifts] = 1
 
-# Print sample data
-print("On-Campus Status (OC):", OC)
-print("Observer Status (O):", O)
-print("Availability Matrix:\n", avail)
+# Create shift names
+dates = [f"March {i+1} (Day {random.choice(['Thu', 'Fri', 'Sat'])}) 8PM" for i in range(num_shifts)]
 
+# Prepare synthetic data summary
+import ace_tools as tools; tools.display_dataframe_to_user(name="Synthetic REMS Data", dataframe=pd.DataFrame(avail, columns=dates))
 
-#Matrix of people availability
-
-"""
-num_people = 100
-num_shifts = 10
-
-# Randomly assign each person 3 available shifts
-avail = np.zeros((num_people, num_shifts), dtype=int)
-np.random.seed(42)  # For reproducibility
-for i in range(num_people):
-    avail[i, np.random.choice(num_shifts, 6, replace=False)] = 1  # Assign 3 available shifts
-
-# Assign some people as Duty Crew (1 = Duty Crew, 0 = not)
-O = [1] * num_people
-
-# Assign some people as Off-Campus (1 = Off-Campus, 0 = On-Campus)
-
-OC = [0] * num_people
-
-
-# Print Sample Data
-print("Availability Matrix (People x Shifts):")
-print(avail)
-print("\nDuty Crew (O):", O)
-print("\nOfficer Candidates (OC):", OC)
-"""
-
+# Package up all parts to return
+synthetic_data_summary = {
+    "emails": emails,
+    "names": names,
+    "O": O,
+    "OC": OC,
+    "dates": dates,
+    "avail_matrix_shape": avail.shape,
+}
+'''
 model = gp.Model("REMS")
-
 #Decision Variables
 x = model.addVars(num_people, num_shifts, vtype=GRB.BINARY, name="x")
 
@@ -129,3 +188,4 @@ for i in range(num_people):
 
 # Print the full matrix
 print(x_values)
+
