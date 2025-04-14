@@ -1,0 +1,9 @@
+/.history
+rems-model-web-app/.env
+rems-model-web-app/package-lock.json
+rems-model-web-app/package.json
+/rems-model-web-app/backend/src/api/routes/__pycache__
+/rems-model-web-app/backend/src/api/__pycache__
+*.lock
+rems-model-web-app/backend/.env
+rems-model-web-app/src/vite-env.d.ts
