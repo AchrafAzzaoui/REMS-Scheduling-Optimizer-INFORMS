@@ -32,6 +32,7 @@ async def create_schedule(request:Request, data: SpreadsheetData):
     # Step One: Parsing the google sheet into a dataframe
     df: pd.DataFrame = GoogleSheetsService.create_scheduler_input_df(data.fileId, auth_access_token)
     # Step Two: Translating the dataframe into gurobi optimization model input
+    print(df.columns)
     model_inputs: Dict[str, any] = ModelInputParserService.parse_df_to_model_input(df)
 
     names = model_inputs["names"]
@@ -42,10 +43,11 @@ async def create_schedule(request:Request, data: SpreadsheetData):
     dates = model_inputs["dates"]
     # Step Three: Calling Schedule Optimizer service and getting raw outputs for scheduling
     gurobi_schedule_optimizer_service = GurobiSchedulerOptimizerService(**model_inputs)
+    schedule: List[Dict[str, str]] = gurobi_schedule_optimizer_service.generate_optimized_schedule()
     # Step Four: Translating uninterpretable model outputs to name, email, timeslots of shift scheduled,
     # etc for calendar view and gcal invites
-
+    print(schedule)
     
-    print(df.columns)
+    # print(df.columns)
 
-    print(data.fileId)
+    # print(data.fileId)

@@ -36,7 +36,7 @@ class ModelInputParserService:
         Returns a list of ints: 1 represents DC Member, 0 
         represents observer
         """
-        roles: List[int] = (df['Are you an Observer'] == "DC Member").astype(int).tolist()
+        roles: List[int] = (df["Are you an Observer or DC Member?"] == "DC Member").astype(int).tolist()
         return roles
     
     @staticmethod
