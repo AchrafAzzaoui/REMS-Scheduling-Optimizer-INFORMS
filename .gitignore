@@ -8,3 +8,5 @@ rems-model-web-app/package.json
 rems-model-web-app/backend/.env
 rems-model-web-app/src/vite-env.d.ts
 rems-model-web-app/backend/src/api/config/credentials.json
+rems-model-web-app/backend/pyproject.toml
+/rems-model-web-app/backend/src/api/services/__pycache__

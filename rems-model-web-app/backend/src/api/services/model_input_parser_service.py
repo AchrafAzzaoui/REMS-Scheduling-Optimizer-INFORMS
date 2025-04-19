@@ -106,7 +106,12 @@ class ModelInputParserService:
         
         dates: List[str] = df.columns[5:].tolist()
 
-        return names, emails, role_statuses, oc_statuses, availability, dates
+        return {"names":names, 
+                "emails": emails,
+                "role_statuses": role_statuses,
+                "oc_statuses": oc_statuses, 
+                "availability": availability,
+                "dates":dates}
        
 
     
