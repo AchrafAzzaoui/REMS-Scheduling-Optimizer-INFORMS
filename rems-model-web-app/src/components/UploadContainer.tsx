@@ -9,7 +9,6 @@ import { FaGoogleDrive } from "react-icons/fa6";
 // type for what we send to the backend to parse the google sheet
 type SpreadsheetData = {
   fileId: String | undefined;
-  authAccessToken: String | undefined;
 };
 
 export default function UploadContainer() {
@@ -36,9 +35,13 @@ export default function UploadContainer() {
     const sendSpreadsheetData = async () => {
       const spreadsheetData: SpreadsheetData = {
         fileId: currentFileId,
-        authAccessToken: authAccessToken,
       };
-      const response = await api.post("/schedules", spreadsheetData);
+      const response = await api.post("/schedules", spreadsheetData, {
+        headers: {
+          Authorization: `Bearer ${authAccessToken}`,
+        },
+      });
+
       console.log(spreadsheetData);
       console.log(response);
     };

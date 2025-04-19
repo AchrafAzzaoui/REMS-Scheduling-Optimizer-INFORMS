@@ -7,3 +7,4 @@ rems-model-web-app/package.json
 *.lock
 rems-model-web-app/backend/.env
 rems-model-web-app/src/vite-env.d.ts
+rems-model-web-app/backend/src/api/config/credentials.json
