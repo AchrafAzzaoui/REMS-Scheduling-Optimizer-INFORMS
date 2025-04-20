@@ -8,7 +8,7 @@ scheduling form, and it will output a calendar with the assigned schedules, alon
  
 Team members and contributions
 
-Achraf Azzaoui:
+Achraf Azzaoui: Worked on the theoretical model and created a full-stack website for interacting with the Gurobi Model.
 
 Assanali Akhtanov: Created slides and implemented the result interpreter
 
