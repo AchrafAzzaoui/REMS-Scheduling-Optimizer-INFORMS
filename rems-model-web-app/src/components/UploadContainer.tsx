@@ -1,11 +1,10 @@
-import { useEffect } from "react";
-import { useState } from "react";
-import axios from "axios";
+import { use, useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import apiClient from "../services/axios";
 import useDrivePicker from "react-google-drive-picker";
 import { Stepper } from "react-form-stepper";
 import { FaGoogleDrive } from "react-icons/fa6";
-
+import { useAuth } from "../context/AuthProvider";
 // type for what we send to the backend to parse the google sheet
 type SpreadsheetData = {
   fileId: String | undefined;
@@ -14,10 +13,11 @@ type SpreadsheetData = {
 export default function UploadContainer() {
   const [openPicker, authResponse] = useDrivePicker();
   const [currentFileId, setCurrentFileId] = useState<String | undefined>();
-  const [authAccessToken, setAuthAccessToken] = useState<String | undefined>();
-
+  const { token, setGoogleToken } = useAuth();
   // axios instance that interfaces with the fast api backend server
   const api = apiClient;
+  // navigation for react router, sends to schedule route after its generated
+  const navigate = useNavigate();
 
   // access token is updated asynchronously, so we leave the logic of updating the file id in the
   // callback function because it relies on the data parameter, but we can use useEffect to automatically
@@ -25,35 +25,40 @@ export default function UploadContainer() {
 
   useEffect(() => {
     if (authResponse?.access_token) {
-      const newAuthAccessToken: String | undefined = authResponse.access_token;
-      setAuthAccessToken((prevAuthAccessToken) => newAuthAccessToken);
+      setGoogleToken(authResponse.access_token);
     }
-  }, [authResponse]);
+  }, [authResponse, setGoogleToken]);
 
   // send both fileId and access token to backend once both are available
   useEffect(() => {
     const sendSpreadsheetData = async () => {
+      if (!currentFileId) return;
+
       const spreadsheetData: SpreadsheetData = {
         fileId: currentFileId,
       };
-      const response = await api.post("/schedules", spreadsheetData, {
-        headers: {
-          Authorization: `Bearer ${authAccessToken}`,
-        },
-      });
 
-      console.log(spreadsheetData);
-      console.log(response);
+      // No need to manually set Authorization header
+      const response = await api.post("/schedules", spreadsheetData);
+
+      console.log(response.data);
+      const schedule = response.data.schedule;
+      navigate("/view-schedule", { state: { schedule } });
     };
-    if (currentFileId && authAccessToken) {
+
+    if (currentFileId) {
       sendSpreadsheetData();
     }
-  }, [currentFileId, authAccessToken]);
+  }, [currentFileId, navigate]);
 
   const handleOpenPicker = () => {
     openPicker({
       clientId: import.meta.env.VITE_CLIENT_ID,
       developerKey: import.meta.env.VITE_DEVELOPER_KEY,
+      customScopes: [
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/calendar",
+      ],
       showUploadView: true,
       showUploadFolders: true,
       supportDrives: true,

@@ -94,6 +94,10 @@ class ModelInputParserService:
         Parses the dataframe into model inputs:
         Returns (names, emails, role_statuses, oc_statuses, availability, dates)
         """
+        if 'Timestamp' in df.columns:
+            df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+            df = df.sort_values('Timestamp').drop_duplicates(subset=['Email Address'], keep='last')
+
         names: List[Tuple[str, str]] = ModelInputParserService.get_names(df)
         emails: List[str] = ModelInputParserService.get_emails(df)
         role_statuses: List[int] = ModelInputParserService.get_role_statuses(df)
